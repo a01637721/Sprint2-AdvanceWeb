@@ -30,6 +30,30 @@ function TaskTable() {
       ? tasks
       : tasks.filter((task) => task.assignedMember === selectedDeveloper);
 
+  // Función para marcar una tarea como completa
+  const markAsComplete = (taskId) => {
+    fetch(`http://localhost:8080/api/tasks/${taskId}/status?status=completed`, {
+      method: "PUT",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Error al actualizar el estado de la tarea");
+        }
+        return response.text();
+      })
+      .then((message) => {
+        console.log(message);
+
+        // Actualizar el estado de la tarea en el frontend
+        setTasks((prevTasks) =>
+          prevTasks.map((task) =>
+            task.id === taskId ? { ...task, status: "completed" } : task
+          )
+        );
+      })
+      .catch((error) => console.error("Error:", error));
+  };
+
   return (
     <div className="task-container">
       <h2>Todas las Tareas Creadas</h2>
@@ -58,22 +82,35 @@ function TaskTable() {
             <th className="table-header">Tipo</th>
             <th className="table-header">Asignado a</th>
             <th className="table-header">Rol</th>
+            <th className="table-header">Estado</th>
+            <th className="table-header">Acciones</th>
           </tr>
         </thead>
         <tbody>
           {filteredTasks.length > 0 ? (
             filteredTasks.map((task, index) => (
-              <tr key={task.id || index}> {/* Usa `task.id` si está disponible, de lo contrario usa el índice */}
+              <tr key={task.id || index}>
                 <td className="table-cell">{task.id || "N/A"}</td>
                 <td className="table-cell">{task.priority || "N/A"}</td>
                 <td className="table-cell">{task.type || "N/A"}</td>
                 <td className="table-cell">{task.assignedMember || "N/A"}</td>
                 <td className="table-cell">{task.role || "Sin Rol"}</td>
+                <td className="table-cell">{task.status || "pending"}</td>
+                <td className="table-cell">
+                  {task.status !== "completed" && (
+                    <button
+                      className="complete-button"
+                      onClick={() => markAsComplete(task.id)}
+                    >
+                      Marcar como Completa
+                    </button>
+                  )}
+                </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="5" className="table-cell">
+              <td colSpan="7" className="table-cell">
                 No hay tareas creadas.
               </td>
             </tr>

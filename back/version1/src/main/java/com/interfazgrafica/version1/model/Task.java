@@ -8,10 +8,10 @@ public class Task {
     @Id
     private String id; // Cambiado de Long a String para trabajar con Firebase
 
-    private String name; // Nombre de la tarea (opcional, si no se usa, se puede eliminar)
+    private String name; // Nombre de la tarea
     private String priority; // Prioridad de la tarea
-    private String status; // Estado de la tarea (opcional, si no se usa, se puede eliminar)
-    private Long workerId; // ID del trabajador asignado (opcional, si no se usa, se puede eliminar)
+    private String status = "pending"; // Estado de la tarea con valor predeterminado
+    private Long workerId; // ID del trabajador asignado
 
     // Campos adicionales necesarios
     private String assignedMember; // Miembro asignado a la tarea

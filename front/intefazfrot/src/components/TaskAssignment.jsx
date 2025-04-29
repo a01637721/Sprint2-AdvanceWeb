@@ -7,6 +7,8 @@ const TaskAssignment = () => {
   const [taskPriority, setTaskPriority] = useState("");
   const [taskType, setTaskType] = useState("");
   const [assignedTasks, setAssignedTasks] = useState([]);
+  const [availableWorkers, setAvailableWorkers] = useState([]); // Trabajadores disponibles
+  const [pendingTasks, setPendingTasks] = useState([]); // Tareas pendientes
   const [message, setMessage] = useState("");
   const [stompClient, setStompClient] = useState(null);
 
@@ -41,6 +43,30 @@ const TaskAssignment = () => {
         client.deactivate();
       }
     };
+  }, []);
+
+  useEffect(() => {
+    // Obtener trabajadores disponibles desde el backend
+    fetch("http://localhost:8080/api/workers/available")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Error al obtener los trabajadores disponibles");
+        }
+        return response.json();
+      })
+      .then((data) => setAvailableWorkers(data))
+      .catch((error) => console.error("Error:", error));
+
+    // Obtener tareas pendientes desde el backend
+    fetch("http://localhost:8080/api/tasks?status=pending")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Error al obtener las tareas pendientes");
+        }
+        return response.json();
+      })
+      .then((data) => setPendingTasks(data))
+      .catch((error) => console.error("Error:", error));
   }, []);
 
   const handleAssignTask = () => {
@@ -107,31 +133,60 @@ const TaskAssignment = () => {
 
       <p className="message">{message}</p>
 
-      {/* Tabla de tareas asignadas */}
-      <h2 className="table-heading">Tareas Asignadas</h2>
+      {/* Tabla de trabajadores disponibles */}
+      <h2 className="table-heading">Trabajadores Disponibles</h2>
       <table className="task-table">
         <thead>
           <tr>
-            <th className="table-header">Empleado</th>
+            <th className="table-header">Nombre</th>
             <th className="table-header">Rol</th>
-            <th className="table-header">Prioridad</th>
-            <th className="table-header">Tipo de Tarea</th>
+            <th className="table-header">Tareas Asignadas</th>
           </tr>
         </thead>
         <tbody>
-          {assignedTasks.length > 0 ? (
-            assignedTasks.map((task, index) => (
+          {availableWorkers.length > 0 ? (
+            availableWorkers.map((worker, index) => (
               <tr key={index}>
-                <td className="table-cell">{task.assignedMember}</td>
-                <td className="table-cell">{task.role || "N/A"}</td>
+                <td className="table-cell">{worker.name}</td>
+                <td className="table-cell">{worker.role}</td>
+                <td className="table-cell">{worker.taskCount}</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="3" className="table-cell">
+                No hay trabajadores disponibles
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+
+      {/* Tabla de tareas pendientes */}
+      <h2 className="table-heading">Tareas Pendientes</h2>
+      <table className="task-table">
+        <thead>
+          <tr>
+            <th className="table-header">ID</th>
+            <th className="table-header">Prioridad</th>
+            <th className="table-header">Tipo</th>
+            <th className="table-header">Asignado a</th>
+          </tr>
+        </thead>
+        <tbody>
+          {pendingTasks.length > 0 ? (
+            pendingTasks.map((task, index) => (
+              <tr key={index}>
+                <td className="table-cell">{task.id}</td>
                 <td className="table-cell">{task.priority}</td>
                 <td className="table-cell">{task.type}</td>
+                <td className="table-cell">{task.assignedMember || "Sin asignar"}</td>
               </tr>
             ))
           ) : (
             <tr>
               <td colSpan="4" className="table-cell">
-                No hay tareas asignadas
+                No hay tareas pendientes
               </td>
             </tr>
           )}
